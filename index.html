@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Friends Guesser</title>
+
+    <style>
+        #image-container {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #000;
+            margin: 0 auto;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        #filename {
+            text-align: center;
+            margin: 10px auto;
+        }
+
+        #guess-input {
+            display: block;
+            width: 400px;
+            margin: 20px auto;
+        }
+
+        #score {
+            text-align: center;
+            margin: 10px auto;
+            font-size: 1.5em;
+        }
+
+        #guess-button {
+            display: block;
+            margin: 0 auto;
+        }
+
+        #try-again-button {
+            display: none;
+            margin: 0 auto;
+        }
+
+        #feedback {
+            text-align: center;
+            margin: 20px auto;
+            font-size: 1.5em;
+        }
+
+        #guess-button, #try-again-button {
+            padding: 20px 40px;
+            font-size: 1.5em;
+        }
+
+        #guess-input {
+            padding: 10px;
+            font-size: 1.5em;
+        }
+
+        #image-container {
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            height: 60vh; /* Adjust this value as needed */
+        }
+
+        #image-container.nightmare img,
+        #image-container.hard img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            margin: 10px;
+        }
+
+        #image-container.normal {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            justify-items: center;
+            align-items: center;
+            width: 50%;
+            height: 50%;
+        }
+
+        #image-container.normal img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add a section for difficulty levels -->
+    <div>
+        <button onclick="setDifficulty('Normal')">Normal</button>
+        <button onclick="setDifficulty('Hard')">Hard</button>
+        <button onclick="setDifficulty('Nightmare')">Nightmare</button>
+    </div>
+    <div id="image-container" class="normal"></div>
+    <div id="filename"></div>
+    <input id="guess-input" list="episode-names" placeholder="Guess the episode..." onkeypress="handleKeyPress(event)">
+    <button id="guess-button" onclick="checkGuess(document.getElementById('guess-input').value)">Guess</button>
+    <button id="try-again-button" onclick="resetGame()">Try Again</button>
+    <datalist id="episode-names">
+        <!-- JavaScript will populate this with the episode names -->
+    </datalist>
+    <div id="score">Score: 0</div>
+    <div id="feedback"></div>
+
+    <script>
+        let episodes = {};
+        let score = 0;
+        let currentEpisode = "";
+        let sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); // Generate a session ID
+        let endpoint = 'https://script.google.com/macros/s/AKfycbwmuB2tf4wDpLJtakDPqL5h49aR5OzKAlj6_crlF-_fgKSuLOGnDSYlu6zQB3KFWkAW/exec';
+        let difficulty = 'Normal'; // Set default difficulty level
+
+        window.onload = function() {
+            setDifficulty(difficulty);
+            showRandomImage();
+        };
+
+        function setDifficulty(newDifficulty) {
+            difficulty = newDifficulty;
+            // Remove old difficulty class
+            document.getElementById('image-container').classList.remove('normal', 'hard', 'nightmare');
+            score = 0;
+            document.getElementById('score').innerText = "Score: " + score;
+            // Add new difficulty class
+            document.getElementById('image-container').classList.add(difficulty.toLowerCase());
+
+            showRandomImage();
+        }
+
+
+        // Fetch the episode data from the JSON file
+        fetch('episodes.json')
+        .then(response => response.json())
+        .then(data => {
+            episodes = data;
+
+            // Populate the datalist with the episode names
+            let datalist = document.getElementById('episode-names');
+            for (let episode in episodes) {
+                let option = document.createElement('option');
+                option.value = episode;
+                datalist.appendChild(option);
+            }
+
+            showRandomImage(); // show a random image immediately when the data is loaded
+        });
+
+        function showRandomImage() {
+            let episodeNames = Object.keys(episodes);
+            let randomEpisodeIndex = Math.floor(Math.random() * episodeNames.length);
+            currentEpisode = episodeNames[randomEpisodeIndex];
+            
+            let images = episodes[currentEpisode];
+            let randomImages = chooseRandomImages(images, difficulty);
+            let encodedImages = randomImages.map(image => encodeURI('randomframes/' + image));
+
+            document.getElementById('image-container').innerHTML = '';
+            for (let encodedImage of encodedImages) {
+                let imgElement = document.createElement('img');
+                imgElement.src = encodedImage;
+                imgElement.classList.add(difficulty.toLowerCase()); // Add the difficulty level as a class
+                document.getElementById('image-container').appendChild(imgElement);
+            }
+            document.getElementById('guess-input').value = "";
+            document.getElementById('guess-input').style.display = 'block';
+            document.getElementById('guess-button').style.display = 'block';
+            document.getElementById('try-again-button').style.display = 'none';
+            document.getElementById('feedback').innerText = '';
+        }
+
+
+        function chooseRandomImages(images, difficulty) {
+            let numImages = difficulty === "Normal" ? 4 : difficulty === "Hard" ? 2 : 1;
+            let randomImages = [];
+
+            for (let i = 0; i < numImages; i++) {
+                let randomImageIndex = Math.floor(Math.random() * images.length);
+                let randomImage = images.splice(randomImageIndex, 1)[0]; // Remove the chosen image from the array
+                randomImages.push(randomImage);
+
+                if (images.length === 0) {
+                    break; // If there are no more images, stop adding them
+                }
+            }
+
+            return randomImages;
+        }
+
+        function handleKeyPress(event) {
+            if (event.keyCode === 13) { // Check if the key pressed was Enter
+                checkGuess(document.getElementById('guess-input').value);
+            }
+        }
+
+        function checkGuess(guess) {
+            if (Object.keys(episodes).includes(guess)) { 
+                if (guess === currentEpisode) {
+                    score++;
+                    showRandomImage();
+                } else {
+                    document.getElementById('guess-input').style.display = 'none';
+                    document.getElementById('guess-button').style.display = 'none';
+                    document.getElementById('try-again-button').style.display = 'block';
+                    document.getElementById('feedback').innerText = "Good try, but no. It was " + currentEpisode + ".";
+                }
+                document.getElementById('score').innerText = "Score: " + score;
+            } else {
+                alert("Please select an episode from the list.");
+            }
+            sendDataToGoogleSheet();
+        }
+
+        function sendDataToGoogleSheet() {
+            fetch(endpoint, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    score: score,
+                    imageLoaded: document.getElementById('image-container').style.backgroundImage
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function resetGame() {
+            score = 0; // reset the score when "Try Again" is clicked
+            showRandomImage();
+            document.getElementById('score').innerText = "Score: " + score;
+        }
+    </script>
+</body>
+</html>
