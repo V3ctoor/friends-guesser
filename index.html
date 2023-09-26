@@ -114,7 +114,7 @@
         let score = 0;
         let currentEpisode = "";
         let sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); // Generate a session ID
-        let endpoint = 'https://script.google.com/macros/s/AKfycbxUvClUodR5L9HTR0fi_zvEy14-itV49CfQo0HAsJ-2x6dGUZPn7dnYJJeyZTBhy0fPUA/exec';
+        let endpoint = 'https://script.google.com/macros/s/AKfycbzMwhF_Vps0wLT3MGOD1VDWIt_TZO2RSgfxyvH3vCKgxh2UAs1lpR95IDbP3-z6tNX7vg/exec';
         let difficulty = 'Normal'; // Set default difficulty level
 
         window.onload = function() {
@@ -227,8 +227,7 @@
                 body: JSON.stringify({
                     sessionId: sessionId,
                     score: score,
-                    imageLoaded: document.getElementById('image-container').style.backgroundImage,
-                    difficulty
+                    imageLoaded: document.getElementById('image-container').style.backgroundImage
                 })
             })
             .catch((error) => {
