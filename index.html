@@ -31,6 +31,13 @@
             font-size: 1.5em;
         }
 
+        #normal-button, #hard-button, #nightmare-button {
+            display: inline-block;
+            margin: 0 auto;
+            padding: 5px 10px;
+            font-size: 1em;
+        }
+
         #guess-button,
         #try-again-button {
             display: block;
@@ -99,7 +106,6 @@
             #image-container.nightmare img,
             #image-container.hard img {
                 width: 100%; /* This will make the image take up the entire width */
-                max-height: 25vh;
             }
 
             #image-container.normal {
@@ -111,9 +117,9 @@
 <body>
     <!-- Add a section for difficulty levels -->
     <div>
-        <button onclick="setDifficulty('Normal')">Normal</button>
-        <button onclick="setDifficulty('Hard')">Hard</button>
-        <button onclick="setDifficulty('Nightmare')">Nightmare</button>
+        <button id="normal-button" onclick="setDifficulty('Normal')">Normal</button>
+        <button id="hard-button" onclick="setDifficulty('Hard')">Hard</button>
+        <button id="nightmare-button" onclick="setDifficulty('Nightmare')">Nightmare</button>
     </div>
     <div id="image-container" class="normal"></div>
     <div id="filename"></div>
@@ -131,7 +137,7 @@
         let score = 0;
         let currentEpisode = "";
         let sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); // Generate a session ID
-        let endpoint = 'https://script.google.com/macros/s/AKfycbzMwhF_Vps0wLT3MGOD1VDWIt_TZO2RSgfxyvH3vCKgxh2UAs1lpR95IDbP3-z6tNX7vg/exec';
+        let endpoint = 'https://script.google.com/macros/s/AKfycbybV3uQSyffPrrvBhOOss5xb_1wshUSzoc0GJ4xfljtpKuGq0UScft9SJ7dv_L2uvk5uw/exec';
         let difficulty = 'Normal'; // Set default difficulty level
 
         window.onload = function() {
@@ -225,7 +231,7 @@
                     document.getElementById('guess-input').style.display = 'none';
                     document.getElementById('guess-button').style.display = 'none';
                     document.getElementById('try-again-button').style.display = 'block';
-                    document.getElementById('feedback').innerText = "Good try, but no. It was " + currentEpisode + ".";
+                    document.getElementById('feedback').innerText = "Oops, not quite right! The correct answer is: " + currentEpisode + ".";
                 }
                 document.getElementById('score').innerText = "Score: " + score;
             } else {
@@ -244,7 +250,8 @@
                 body: JSON.stringify({
                     sessionId: sessionId,
                     score: score,
-                    imageLoaded: document.getElementById('image-container').style.backgroundImage
+                    imageLoaded: document.getElementById('image-container').style.backgroundImage,
+                    difficulty: difficulty
                 })
             })
             .catch((error) => {
